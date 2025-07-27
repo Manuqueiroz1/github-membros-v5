@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Settings, Users, BookOpen, Plus, Edit3, Trash2, Save, Upload, FileText, Video, Award, User } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Settings, Users, BookOpen, Video, Plus, Edit3, Trash2, Save, Eye, EyeOff } from 'lucide-react';
 import { isAdmin, hasPermission } from '../utils/adminConfig';
-import { addStudent, getStudents, removeStudent, updateStudentStatus, getStudentStats, searchStudents, ManualStudent, CreateStudentData } from '../utils/studentManager';
+import { addStudent, getStudents, removeStudent, updateStudentStatus, searchStudents, getStudentStats, ManualStudent } from '../utils/studentManager';
+import { getOnboardingVideos, saveOnboardingVideos, getPopupContents, savePopupContents, OnboardingVideo, PopupContent } from '../data/onboardingData';
 import { bonusResources } from '../data/bonusData';
 import { BonusResource, BonusLesson, QuizQuestion } from '../types';
 
@@ -12,202 +13,84 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'bonuses' | 'students' | 'onboarding'>('overview');
-  const [bonuses, setBonuses] = useState<BonusResource[]>([]);
-  const [selectedBonus, setSelectedBonus] = useState<BonusResource | null>(null);
-  const [selectedLesson, setSelectedLesson] = useState<BonusLesson | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showNewBonusModal, setShowNewBonusModal] = useState(false);
-  const [showNewLessonModal, setShowNewLessonModal] = useState(false);
-
-  // Estados para gerenciamento de alunos
+  const [activeTab, setActiveTab] = useState('students');
   const [students, setStudents] = useState<ManualStudent[]>([]);
   const [studentStats, setStudentStats] = useState({ total: 0, active: 0, inactive: 0, addedThisMonth: 0 });
   const [searchQuery, setSearchQuery] = useState('');
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
-  const [newStudent, setNewStudent] = useState<CreateStudentData>({
-    name: '',
-    email: '',
-    notes: '',
-    added_by: userEmail
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [newStudent, setNewStudent] = useState({ name: '', email: '', notes: '' });
+  
+  // Onboarding states
+  const [onboardingVideos, setOnboardingVideos] = useState<OnboardingVideo[]>([]);
+  const [popupContents, setPopupContents] = useState<PopupContent[]>([]);
+  const [editingVideo, setEditingVideo] = useState<OnboardingVideo | null>(null);
+  const [editingPopup, setEditingPopup] = useState<PopupContent | null>(null);
+
+  // Bonus management states
+  const [bonuses, setBonuses] = useState<BonusResource[]>(() => {
+    const saved = localStorage.getItem('teacherpoli_bonus_data');
+    return saved ? JSON.parse(saved) : bonusResources;
   });
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [editingBonus, setEditingBonus] = useState<BonusResource | null>(null);
+  const [editingLesson, setEditingLesson] = useState<{ bonus: BonusResource; lesson: BonusLesson } | null>(null);
+  const [showNewBonus, setShowNewBonus] = useState(false);
+  const [showNewLesson, setShowNewLesson] = useState<string | null>(null);
 
-  // Carregar bônus salvos
-  useEffect(() => {
-    const savedBonuses = localStorage.getItem('teacherpoli_bonus_data');
-    if (savedBonuses) {
-      setBonuses(JSON.parse(savedBonuses));
-    } else {
-      setBonuses(bonusResources);
-    }
-  }, []);
-
-  // Carregar alunos
-  useEffect(() => {
-    if (activeTab === 'students') {
+  // Load data on mount
+  React.useEffect(() => {
+    if (isVisible && isAdmin(userEmail)) {
       loadStudents();
-      loadStudentStats();
+      loadOnboardingData();
     }
-  }, [activeTab]);
+  }, [isVisible, userEmail]);
 
   const loadStudents = async () => {
-    setIsLoadingStudents(true);
     try {
-      const studentsData = searchQuery ? await searchStudents(searchQuery) : await getStudents();
+      const [studentsData, stats] = await Promise.all([
+        getStudents(),
+        getStudentStats()
+      ]);
       setStudents(studentsData);
-    } catch (error) {
-      console.error('Erro ao carregar alunos:', error);
-    } finally {
-      setIsLoadingStudents(false);
-    }
-  };
-  // Salvar bônus
-  const saveBonuses = (updatedBonuses: BonusResource[]) => {
-    setBonuses(updatedBonuses);
-    localStorage.setItem('teacherpoli_bonus_data', JSON.stringify(updatedBonuses));
-    // Disparar evento para atualizar outros componentes
-    window.dispatchEvent(new Event('bonusDataUpdated'));
-  };
-
-  // Criar novo bônus
-  const createNewBonus = (bonusData: Partial<BonusResource>) => {
-    const newBonus: BonusResource = {
-      id: `bonus_${Date.now()}`,
-      title: bonusData.title || 'Novo Bônus',
-      description: bonusData.description || 'Descrição do bônus',
-      type: bonusData.type || 'course',
-      thumbnail: bonusData.thumbnail || 'https://images.pexels.com/photos/4145190/pexels-photo-4145190.jpeg?auto=compress&cs=tinysrgb&w=800',
-      totalLessons: 0,
-      totalDuration: '0h',
-      rating: 4.5,
-      downloads: 0,
-      lessons: []
-    };
-
-    const updatedBonuses = [...bonuses, newBonus];
-    saveBonuses(updatedBonuses);
-    setShowNewBonusModal(false);
-  };
-
-  // Atualizar bônus
-  const updateBonus = (bonusId: string, updates: Partial<BonusResource>) => {
-    const updatedBonuses = bonuses.map(bonus =>
-      bonus.id === bonusId ? { ...bonus, ...updates } : bonus
-    );
-    saveBonuses(updatedBonuses);
-    if (selectedBonus?.id === bonusId) {
-      setSelectedBonus({ ...selectedBonus, ...updates });
-    }
-  };
-
-  // Deletar bônus
-  const deleteBonus = (bonusId: string) => {
-    if (confirm('Tem certeza que deseja deletar este bônus?')) {
-      const updatedBonuses = bonuses.filter(bonus => bonus.id !== bonusId);
-      saveBonuses(updatedBonuses);
-      if (selectedBonus?.id === bonusId) {
-        setSelectedBonus(null);
-      }
-    }
-  };
-
-  // Criar nova lição
-  const createNewLesson = (lessonData: Partial<BonusLesson>) => {
-    if (!selectedBonus) return;
-
-    const newLesson: BonusLesson = {
-      id: `lesson_${Date.now()}`,
-      title: lessonData.title || 'Nova Lição',
-      description: lessonData.description || 'Descrição da lição',
-      videoUrl: lessonData.videoUrl || 'https://www.youtube.com/embed/mttHTuEK5Xs',
-      duration: lessonData.duration || '10:00',
-      textContent: lessonData.textContent || 'Conteúdo da lição...',
-      exercises: [],
-      completed: false
-    };
-
-    const updatedLessons = [...selectedBonus.lessons, newLesson];
-    const updatedBonus = {
-      ...selectedBonus,
-      lessons: updatedLessons,
-      totalLessons: updatedLessons.length
-    };
-
-    updateBonus(selectedBonus.id, updatedBonus);
-    setShowNewLessonModal(false);
-  };
-
-  // Atualizar lição
-  const updateLesson = (lessonId: string, updates: Partial<BonusLesson>) => {
-    if (!selectedBonus) return;
-
-    const updatedLessons = selectedBonus.lessons.map(lesson =>
-      lesson.id === lessonId ? { ...lesson, ...updates } : lesson
-    );
-
-    const updatedBonus = { ...selectedBonus, lessons: updatedLessons };
-    updateBonus(selectedBonus.id, updatedBonus);
-    
-    if (selectedLesson?.id === lessonId) {
-      setSelectedLesson({ ...selectedLesson, ...updates });
-    }
-  };
-
-  // Deletar lição
-  const deleteLesson = (lessonId: string) => {
-    if (!selectedBonus) return;
-    if (confirm('Tem certeza que deseja deletar esta lição?')) {
-      const updatedLessons = selectedBonus.lessons.filter(lesson => lesson.id !== lessonId);
-      const updatedBonus = {
-        ...selectedBonus,
-        lessons: updatedLessons,
-        totalLessons: updatedLessons.length
-      };
-      updateBonus(selectedBonus.id, updatedBonus);
-      if (selectedLesson?.id === lessonId) {
-        setSelectedLesson(null);
-      }
-    }
-  };
-
-  const loadStudentStats = async () => {
-    try {
-      const stats = await getStudentStats();
       setStudentStats(stats);
     } catch (error) {
-      console.error('Erro ao carregar estatísticas:', error);
+      console.error('Erro ao carregar alunos:', error);
     }
+  };
+
+  const loadOnboardingData = () => {
+    setOnboardingVideos(getOnboardingVideos());
+    setPopupContents(getPopupContents());
   };
 
   const handleAddStudent = async () => {
-    if (!newStudent.name || !newStudent.email) {
-      alert('Nome e email são obrigatórios');
-      return;
-    }
-
+    if (!newStudent.name || !newStudent.email) return;
+    
+    setIsLoading(true);
     try {
-      await addStudent(newStudent);
-      setShowAddStudentModal(false);
-      setNewStudent({ name: '', email: '', notes: '', added_by: userEmail });
-      loadStudents();
-      loadStudentStats();
-      alert('Aluno adicionado com sucesso!');
-    } catch (error: any) {
-      alert(error.message || 'Erro ao adicionar aluno');
+      await addStudent({
+        ...newStudent,
+        added_by: userEmail
+      });
+      
+      setNewStudent({ name: '', email: '', notes: '' });
+      setShowAddStudent(false);
+      await loadStudents();
+    } catch (error) {
+      alert('Erro ao adicionar aluno: ' + (error as Error).message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRemoveStudent = async (studentId: string) => {
-    if (confirm('Tem certeza que deseja remover este aluno?')) {
-      try {
-        await removeStudent(studentId);
-        loadStudents();
-        loadStudentStats();
-        alert('Aluno removido com sucesso!');
-      } catch (error) {
-        alert('Erro ao remover aluno');
-      }
+    if (!confirm('Tem certeza que deseja remover este aluno?')) return;
+    
+    try {
+      await removeStudent(studentId);
+      await loadStudents();
+    } catch (error) {
+      alert('Erro ao remover aluno: ' + (error as Error).message);
     }
   };
 
@@ -215,862 +98,878 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
     try {
       await updateStudentStatus(studentId, newStatus);
-      loadStudents();
-      loadStudentStats();
+      await loadStudents();
     } catch (error) {
-      alert('Erro ao atualizar status do aluno');
+      alert('Erro ao atualizar status: ' + (error as Error).message);
     }
   };
 
-  if (!isAdmin(userEmail)) {
-    return null;
-  }
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      await loadStudents();
+      return;
+    }
+    
+    try {
+      const results = await searchStudents(searchQuery);
+      setStudents(results);
+    } catch (error) {
+      console.error('Erro na busca:', error);
+    }
+  };
+
+  const saveOnboardingData = () => {
+    saveOnboardingVideos(onboardingVideos);
+    savePopupContents(popupContents);
+    window.dispatchEvent(new Event('onboardingDataUpdated'));
+    window.dispatchEvent(new Event('popupDataUpdated'));
+  };
+
+  const saveBonusData = () => {
+    localStorage.setItem('teacherpoli_bonus_data', JSON.stringify(bonuses));
+    window.dispatchEvent(new Event('bonusDataUpdated'));
+  };
+
+  const handleSaveBonus = (updatedBonus: BonusResource) => {
+    setBonuses(prev => prev.map(b => b.id === updatedBonus.id ? updatedBonus : b));
+    setEditingBonus(null);
+    saveBonusData();
+  };
+
+  const handleDeleteBonus = (bonusId: string) => {
+    if (!confirm('Tem certeza que deseja deletar este bônus?')) return;
+    setBonuses(prev => prev.filter(b => b.id !== bonusId));
+    saveBonusData();
+  };
+
+  const handleCreateBonus = (newBonus: Omit<BonusResource, 'id'>) => {
+    const bonus: BonusResource = {
+      ...newBonus,
+      id: `bonus_${Date.now()}`
+    };
+    setBonuses(prev => [...prev, bonus]);
+    setShowNewBonus(false);
+    saveBonusData();
+  };
+
+  const handleSaveLesson = (bonusId: string, updatedLesson: BonusLesson) => {
+    setBonuses(prev => prev.map(b => 
+      b.id === bonusId 
+        ? { ...b, lessons: b.lessons.map(l => l.id === updatedLesson.id ? updatedLesson : l) }
+        : b
+    ));
+    setEditingLesson(null);
+    saveBonusData();
+  };
+
+  const handleDeleteLesson = (bonusId: string, lessonId: string) => {
+    if (!confirm('Tem certeza que deseja deletar esta lição?')) return;
+    setBonuses(prev => prev.map(b => 
+      b.id === bonusId 
+        ? { ...b, lessons: b.lessons.filter(l => l.id !== lessonId) }
+        : b
+    ));
+    saveBonusData();
+  };
+
+  const handleCreateLesson = (bonusId: string, newLesson: Omit<BonusLesson, 'id'>) => {
+    const lesson: BonusLesson = {
+      ...newLesson,
+      id: `lesson_${Date.now()}`
+    };
+    setBonuses(prev => prev.map(b => 
+      b.id === bonusId 
+        ? { ...b, lessons: [...b.lessons, lesson], totalLessons: b.totalLessons + 1 }
+        : b
+    ));
+    setShowNewLesson(null);
+    saveBonusData();
+  };
+
+  if (!isVisible || !isAdmin(userEmail)) return null;
 
   return (
-    <>
-      {/* Admin Toggle Button */}
-      <div className="fixed top-20 right-4 z-50">
-        <button
-          onClick={onToggle}
-          className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-full shadow-lg transition-all"
-          title="Painel Admin"
-        >
-          <Settings className="h-5 w-5" />
-        </button>
-      </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <Settings className="h-5 w-5 text-red-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Painel Administrativo</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Gerencie conteúdo e usuários</p>
+            </div>
+          </div>
+          <button
+            onClick={onToggle}
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
 
-      {/* Admin Panel */}
-      {isVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="bg-white dark:bg-gray-800 w-full max-w-6xl mx-auto my-4 rounded-lg shadow-xl overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="bg-red-600 text-white p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Settings className="h-6 w-6" />
-                <h2 className="text-xl font-bold">Painel Administrativo</h2>
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex space-x-8 px-6">
+            {[
+              { id: 'students', label: 'Alunos Manuais', icon: Users },
+              { id: 'onboarding', label: 'Onboarding', icon: Video },
+              { id: 'bonuses', label: 'Gerenciar Bônus', icon: BookOpen }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-red-500 text-red-600 dark:text-red-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Students Tab */}
+          {activeTab === 'students' && (
+            <div className="space-y-6">
+              {/* Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{studentStats.total}</div>
+                  <div className="text-sm text-blue-800 dark:text-blue-300">Total de Alunos</div>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">{studentStats.active}</div>
+                  <div className="text-sm text-green-800 dark:text-green-300">Ativos</div>
+                </div>
+                <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-red-600 dark:text-red-400">{studentStats.inactive}</div>
+                  <div className="text-sm text-red-800 dark:text-red-300">Inativos</div>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{studentStats.addedThisMonth}</div>
+                  <div className="text-sm text-purple-800 dark:text-purple-300">Este Mês</div>
+                </div>
               </div>
-              <button
-                onClick={onToggle}
-                className="p-2 hover:bg-red-700 rounded-lg transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
 
-            {/* Tabs */}
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex space-x-8 px-6">
-                <button
-                  onClick={() => setActiveTab('overview')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'overview'
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Visão Geral
-                </button>
-                <button
-                  onClick={() => setActiveTab('bonuses')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'bonuses'
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <BookOpen className="h-4 w-4 inline mr-2" />
-                  Gerenciar Bônus
-                </button>
-                <button
-                  onClick={() => setActiveTab('students')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'students'
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Users className="h-4 w-4 inline mr-2" />
-                  Alunos
-                </button>
-                <button
-                  onClick={() => setActiveTab('onboarding')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'onboarding'
-                      ? 'border-red-500 text-red-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Video className="h-4 w-4 inline mr-2" />
-                  Onboarding
-                </button>
-              </nav>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {activeTab === 'overview' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Administrativo</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg">
-                      <div className="flex items-center">
-                        <BookOpen className="h-8 w-8 text-blue-600" />
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total de Bônus</p>
-                          <p className="text-2xl font-bold text-blue-900 dark:text-white">{bonuses.length}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-green-50 dark:bg-green-900/30 p-6 rounded-lg">
-                      <div className="flex items-center">
-                        <Video className="h-8 w-8 text-green-600" />
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-green-600 dark:text-green-400">Total de Lições</p>
-                          <p className="text-2xl font-bold text-green-900 dark:text-white">
-                            {bonuses.reduce((total, bonus) => total + bonus.lessons.length, 0)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-purple-50 dark:bg-purple-900/30 p-6 rounded-lg">
-                      <div className="flex items-center">
-                        <Users className="h-8 w-8 text-purple-600" />
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Usuários Ativos</p>
-                          <p className="text-2xl font-bold text-purple-900 dark:text-white">{studentStats.active}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome ou email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Buscar
+                  </button>
                 </div>
-              )}
+                <button
+                  onClick={() => setShowAddStudent(true)}
+                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Aluno
+                </button>
+              </div>
 
-              {activeTab === 'bonuses' && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Bônus</h3>
-                    <button
-                      onClick={() => setShowNewBonusModal(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Novo Bônus
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Lista de Bônus */}
-                    <div className="lg:col-span-1">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                          <h4 className="font-semibold text-gray-900 dark:text-white">Lista de Bônus</h4>
-                        </div>
-                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                          {bonuses.map((bonus) => (
-                            <div
-                              key={bonus.id}
-                              className={`p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                                selectedBonus?.id === bonus.id ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+              {/* Students List */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Aluno
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Adicionado em
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Ações
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {students.map((student) => (
+                        <tr key={student.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">{student.name}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{student.email}</div>
+                              {student.notes && (
+                                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">{student.notes}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              student.status === 'active'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>
+                              {student.status === 'active' ? 'Ativo' : 'Inativo'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(student.added_at).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              onClick={() => handleToggleStudentStatus(student.id, student.status)}
+                              className={`px-3 py-1 rounded text-xs font-medium ${
+                                student.status === 'active'
+                                  ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400'
+                                  : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400'
                               }`}
-                              onClick={() => setSelectedBonus(bonus)}
                             >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <h5 className="font-medium text-gray-900 dark:text-white text-sm">{bonus.title}</h5>
-                                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">{bonus.lessons.length} lições</p>
-                                </div>
-                                <div className="flex space-x-1">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedBonus(bonus);
-                                      setIsEditing(true);
-                                    }}
-                                    className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                                  >
-                                    <Edit3 className="h-3 w-3" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteBonus(bonus.id);
-                                    }}
-                                    className="p-1 text-red-600 hover:bg-red-100 rounded"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Detalhes do Bônus */}
-                    <div className="lg:col-span-2">
-                      {selectedBonus ? (
-                        <div className="space-y-6">
-                          {/* Informações do Bônus */}
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Informações do Bônus</h4>
-                              <button
-                                onClick={() => setIsEditing(!isEditing)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                              >
-                                {isEditing ? 'Cancelar' : 'Editar'}
-                              </button>
-                            </div>
-
-                            {isEditing ? (
-                              <BonusEditForm
-                                bonus={selectedBonus}
-                                onSave={(updates) => {
-                                  updateBonus(selectedBonus.id, updates);
-                                  setIsEditing(false);
-                                }}
-                                onCancel={() => setIsEditing(false)}
-                              />
-                            ) : (
-                              <div className="space-y-4">
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
-                                  <p className="text-gray-900 dark:text-white">{selectedBonus.title}</p>
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
-                                  <p className="text-gray-900 dark:text-white">{selectedBonus.description}</p>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
-                                    <p className="text-gray-900 dark:text-white capitalize">{selectedBonus.type}</p>
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Avaliação</label>
-                                    <p className="text-gray-900 dark:text-white">{selectedBonus.rating}/5</p>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Lições */}
-                          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                              <h4 className="font-semibold text-gray-900 dark:text-white">Lições ({selectedBonus.lessons.length})</h4>
-                              <button
-                                onClick={() => setShowNewLessonModal(true)}
-                                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors flex items-center"
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Nova Lição
-                              </button>
-                            </div>
-                            <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                              {selectedBonus.lessons.map((lesson, index) => (
-                                <div key={lesson.id} className="p-4">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <h5 className="font-medium text-gray-900 dark:text-white">{lesson.title}</h5>
-                                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{lesson.description}</p>
-                                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                        <span>Duração: {lesson.duration}</span>
-                                        <span>{lesson.exercises.length} exercícios</span>
-                                      </div>
-                                    </div>
-                                    <div className="flex space-x-2">
-                                      <button
-                                        onClick={() => setSelectedLesson(lesson)}
-                                        className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                                        title="Editar lição"
-                                      >
-                                        <Edit3 className="h-4 w-4" />
-                                      </button>
-                                      <button
-                                        onClick={() => deleteLesson(lesson.id)}
-                                        className="p-1 text-red-600 hover:bg-red-100 rounded"
-                                        title="Deletar lição"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                          <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-gray-500 dark:text-gray-400">Selecione um bônus para ver os detalhes</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                              {student.status === 'active' ? 'Desativar' : 'Ativar'}
+                            </button>
+                            <button
+                              onClick={() => handleRemoveStudent(student.id)}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400"
+                            >
+                              Remover
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+              </div>
+            </div>
+          )}
 
-              {activeTab === 'students' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Alunos</h3>
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                    <button
-                      onClick={() => setShowAddStudentModal(true)}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar Aluno
-                    </button>
-                  </div>
-
-                  {/* Estatísticas */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        <Users className="h-6 w-6 text-blue-600" />
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total</p>
-                          <p className="text-xl font-bold text-gray-900 dark:text-white">{studentStats.total}</p>
-                        </div>
+          {/* Onboarding Tab */}
+          {activeTab === 'onboarding' && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gerenciar Conteúdo de Onboarding</h3>
+              
+              {/* Videos */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Vídeos de Boas-vindas</h4>
+                <div className="space-y-3">
+                  {onboardingVideos.map((video) => (
+                    <div key={video.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div>
+                        <h5 className="font-medium text-gray-900 dark:text-white">{video.title}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{video.description}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Duração: {video.duration}</p>
                       </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                          <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Ativos</p>
-                          <p className="text-xl font-bold text-green-600">{studentStats.active}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-                          <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Inativos</p>
-                          <p className="text-xl font-bold text-red-600">{studentStats.inactive}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                          <Plus className="w-3 h-3 text-purple-600" />
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Este Mês</p>
-                          <p className="text-xl font-bold text-purple-600">{studentStats.addedThisMonth}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Busca */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <div className="flex items-center space-x-4">
-                      <input
-                        type="text"
-                        placeholder="Buscar por nome ou email..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                      />
                       <button
-                        onClick={loadStudents}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        onClick={() => setEditingVideo(video)}
+                        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
-                        Buscar
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Editar
                       </button>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
 
-                  {/* Lista de Alunos */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                      <h4 className="font-semibold text-gray-900 dark:text-white">
-                        Lista de Alunos ({students.length})
-                      </h4>
+              {/* Pop-ups */}
+              <div>
+                <h4 className="text-md font-medium text-gray-900 dark:text-white mb-4">Pop-ups do Sistema</h4>
+                <div className="space-y-3">
+                  {popupContents.map((popup) => (
+                    <div key={popup.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div>
+                        <h5 className="font-medium text-gray-900 dark:text-white">{popup.title}</h5>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{popup.subtitle}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Tipo: {popup.type}</p>
+                      </div>
+                      <button
+                        onClick={() => setEditingPopup(popup)}
+                        className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Editar
+                      </button>
                     </div>
-                    
-                    {isLoadingStudents ? (
-                      <div className="p-8 text-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                        <p className="text-gray-500 dark:text-gray-400 mt-2">Carregando alunos...</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bonuses Tab */}
+          {activeTab === 'bonuses' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gerenciar Bônus</h3>
+                <button
+                  onClick={() => setShowNewBonus(true)}
+                  className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Bônus
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {bonuses.map((bonus) => (
+                  <div key={bonus.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{bonus.title}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{bonus.description}</p>
+                        <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span>{bonus.totalLessons} lições</span>
+                          <span>{bonus.totalDuration}</span>
+                          <span>⭐ {bonus.rating}</span>
+                        </div>
                       </div>
-                    ) : students.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500 dark:text-gray-400">
-                          {searchQuery ? 'Nenhum aluno encontrado' : 'Nenhum aluno cadastrado'}
-                        </p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setEditingBonus(bonus)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteBonus(bonus.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                    ) : (
-                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {students.map((student) => (
-                          <div key={student.id} className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                                  <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                                </div>
-                                <div>
-                                  <h5 className="font-medium text-gray-900 dark:text-white">{student.name}</h5>
-                                  <p className="text-sm text-gray-600 dark:text-gray-300">{student.email}</p>
-                                  {student.notes && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{student.notes}</p>
-                                  )}
-                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                    Adicionado em {new Date(student.added_at).toLocaleDateString('pt-BR')}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => handleToggleStudentStatus(student.id, student.status)}
-                                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                    student.status === 'active'
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                  }`}
-                                >
-                                  {student.status === 'active' ? 'Ativo' : 'Inativo'}
-                                </button>
-                                <button
-                                  onClick={() => handleRemoveStudent(student.id)}
-                                  className="p-1 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
-                                  title="Remover aluno"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="text-sm font-medium text-gray-900 dark:text-white">Lições ({bonus.lessons.length})</h5>
+                        <button
+                          onClick={() => setShowNewLesson(bonus.id)}
+                          className="text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                        >
+                          + Nova Lição
+                        </button>
+                      </div>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {bonus.lessons.map((lesson) => (
+                          <div key={lesson.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{lesson.title}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{lesson.duration} • {lesson.exercises.length} exercícios</p>
+                            </div>
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => setEditingLesson({ bonus, lesson })}
+                                className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+                              >
+                                <Edit3 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteLesson(bonus.id, lesson.id)}
+                                className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
                             </div>
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {activeTab === 'onboarding' && (
-                <div className="space-y-6">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Onboarding</h3>
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400">Funcionalidade de gerenciamento de onboarding em desenvolvimento</p>
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
 
-      {/* Modais */}
-      <NewBonusModal
-        isOpen={showNewBonusModal}
-        onClose={() => setShowNewBonusModal(false)}
-        onSave={createNewBonus}
-      />
-
-      <NewLessonModal
-        isOpen={showNewLessonModal}
-        onClose={() => setShowNewLessonModal(false)}
-        onSave={createNewLesson}
-      />
-
-      {/* Modal Adicionar Aluno */}
-      {showAddStudentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-            <div className="p-6">
+        {/* Modals */}
+        {/* Add Student Modal */}
+        {showAddStudent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Adicionar Novo Aluno</h3>
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
-                  <input
-                    type="text"
-                    value={newStudent.name}
-                    onChange={(e) => setNewStudent(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Nome do aluno"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={newStudent.email}
-                    onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="email@exemplo.com"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações (opcional)</label>
-                  <textarea
-                    value={newStudent.notes}
-                    onChange={(e) => setNewStudent(prev => ({ ...prev, notes: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Observações sobre o aluno..."
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Nome completo"
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={newStudent.email}
+                  onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+                <textarea
+                  placeholder="Observações (opcional)"
+                  value={newStudent.notes}
+                  onChange={(e) => setNewStudent(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  rows={3}
+                />
               </div>
-              <div className="flex space-x-3 pt-6">
+              <div className="flex space-x-3 mt-6">
                 <button
-                  onClick={handleAddStudent}
-                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Adicionar Aluno
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddStudentModal(false);
-                    setNewStudent({ name: '', email: '', notes: '', added_by: userEmail });
-                  }}
-                  className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  onClick={() => setShowAddStudent(false)}
+                  className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 >
                   Cancelar
                 </button>
+                <button
+                  onClick={handleAddStudent}
+                  disabled={isLoading || !newStudent.name || !newStudent.email}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Adicionando...' : 'Adicionar'}
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <LessonEditModal
-        lesson={selectedLesson}
-        isOpen={!!selectedLesson}
-        onClose={() => setSelectedLesson(null)}
-        onSave={(updates) => {
-          if (selectedLesson) {
-            updateLesson(selectedLesson.id, updates);
-            setSelectedLesson(null);
-          }
-        }}
-      />
-    </>
+        {/* Edit Video Modal */}
+        {editingVideo && (
+          <EditVideoModal
+            video={editingVideo}
+            onSave={(updatedVideo) => {
+              setOnboardingVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+              setEditingVideo(null);
+              saveOnboardingData();
+            }}
+            onClose={() => setEditingVideo(null)}
+          />
+        )}
+
+        {/* Edit Popup Modal */}
+        {editingPopup && (
+          <EditPopupModal
+            popup={editingPopup}
+            onSave={(updatedPopup) => {
+              setPopupContents(prev => prev.map(p => p.id === updatedPopup.id ? updatedPopup : p));
+              setEditingPopup(null);
+              saveOnboardingData();
+            }}
+            onClose={() => setEditingPopup(null)}
+          />
+        )}
+
+        {/* New Bonus Modal */}
+        {showNewBonus && (
+          <NewBonusModal
+            onSave={handleCreateBonus}
+            onClose={() => setShowNewBonus(false)}
+          />
+        )}
+
+        {/* Edit Bonus Modal */}
+        {editingBonus && (
+          <EditBonusModal
+            bonus={editingBonus}
+            onSave={handleSaveBonus}
+            onClose={() => setEditingBonus(null)}
+          />
+        )}
+
+        {/* New Lesson Modal */}
+        {showNewLesson && (
+          <NewLessonModal
+            bonusId={showNewLesson}
+            onSave={(lesson) => handleCreateLesson(showNewLesson, lesson)}
+            onClose={() => setShowNewLesson(null)}
+          />
+        )}
+
+        {/* Edit Lesson Modal */}
+        {editingLesson && (
+          <EditLessonModal
+            lesson={editingLesson.lesson}
+            onSave={(lesson) => handleSaveLesson(editingLesson.bonus.id, lesson)}
+            onClose={() => setEditingLesson(null)}
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
-// Componente para editar bônus
-function BonusEditForm({ bonus, onSave, onCancel }: {
-  bonus: BonusResource;
-  onSave: (updates: Partial<BonusResource>) => void;
-  onCancel: () => void;
-}) {
-  const [formData, setFormData] = useState({
-    title: bonus.title,
-    description: bonus.description,
-    type: bonus.type,
-    thumbnail: bonus.thumbnail,
-    rating: bonus.rating
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+// Helper Components
+function EditVideoModal({ video, onSave, onClose }: { video: OnboardingVideo; onSave: (video: OnboardingVideo) => void; onClose: () => void }) {
+  const [formData, setFormData] = useState(video);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
-        <input
-          type="text"
-          value={formData.title}
-          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        />
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Vídeo</h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Título"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={3}
+          />
+          <input
+            type="text"
+            placeholder="Duração (ex: 2:30)"
+            value={formData.duration}
+            onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="url"
+            placeholder="URL do vídeo (YouTube embed)"
+            value={formData.embedUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, embedUrl: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Salvar
+          </button>
+        </div>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        />
+    </div>
+  );
+}
+
+function EditPopupModal({ popup, onSave, onClose }: { popup: PopupContent; onSave: (popup: PopupContent) => void; onClose: () => void }) {
+  const [formData, setFormData] = useState(popup);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Pop-up</h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Título"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="text"
+            placeholder="Subtítulo"
+            value={formData.subtitle}
+            onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={4}
+          />
+          <input
+            type="text"
+            placeholder="Texto do botão"
+            value={formData.buttonText}
+            onChange={(e) => setFormData(prev => ({ ...prev, buttonText: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Features (uma por linha)
+            </label>
+            <textarea
+              value={formData.features.join('\n')}
+              onChange={(e) => setFormData(prev => ({ ...prev, features: e.target.value.split('\n').filter(f => f.trim()) }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              rows={6}
+            />
+          </div>
+        </div>
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Salvar
+          </button>
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+    </div>
+  );
+}
+
+function NewBonusModal({ onSave, onClose }: { onSave: (bonus: Omit<BonusResource, 'id'>) => void; onClose: () => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'course' as 'course' | 'ebook' | 'guide',
+    thumbnail: '',
+    totalLessons: 0,
+    totalDuration: '',
+    rating: 4.5,
+    downloads: 0,
+    lessons: []
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Criar Novo Bônus</h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Título do bônus"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={3}
+          />
           <select
             value={formData.type}
             onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="course">Curso</option>
             <option value="ebook">E-book</option>
             <option value="guide">Guia</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Avaliação</label>
+          <input
+            type="url"
+            placeholder="URL da thumbnail"
+            value={formData.thumbnail}
+            onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="text"
+            placeholder="Duração total (ex: 4h 30min)"
+            value={formData.totalDuration}
+            onChange={(e) => setFormData(prev => ({ ...prev, totalDuration: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
           <input
             type="number"
-            min="0"
+            placeholder="Avaliação (1-5)"
+            min="1"
             max="5"
             step="0.1"
             value={formData.rating}
             onChange={(e) => setFormData(prev => ({ ...prev, rating: parseFloat(e.target.value) }))}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           />
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL da Thumbnail</label>
-        <input
-          type="url"
-          value={formData.thumbnail}
-          onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        />
-      </div>
-      <div className="flex space-x-3">
-        <button
-          type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Salvar
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-        >
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// Modal para criar novo bônus
-function NewBonusModal({ isOpen, onClose, onSave }: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: Partial<BonusResource>) => void;
-}) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'course' as const,
-    thumbnail: 'https://images.pexels.com/photos/4145190/pexels-photo-4145190.jpeg?auto=compress&cs=tinysrgb&w=800'
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    setFormData({
-      title: '',
-      description: '',
-      type: 'course',
-      thumbnail: 'https://images.pexels.com/photos/4145190/pexels-photo-4145190.jpeg?auto=compress&cs=tinysrgb&w=800'
-    });
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Criar Novo Bônus</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              >
-                <option value="course">Curso</option>
-                <option value="ebook">E-book</option>
-                <option value="guide">Guia</option>
-              </select>
-            </div>
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="submit"
-                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Criar Bônus
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            disabled={!formData.title || !formData.description}
+            className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+          >
+            Criar Bônus
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// Modal para criar nova lição
-function NewLessonModal({ isOpen, onClose, onSave }: {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: Partial<BonusLesson>) => void;
-}) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    videoUrl: 'https://www.youtube.com/embed/mttHTuEK5Xs',
-    duration: '10:00',
-    textContent: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    setFormData({
-      title: '',
-      description: '',
-      videoUrl: 'https://www.youtube.com/embed/mttHTuEK5Xs',
-      duration: '10:00',
-      textContent: ''
-    });
-  };
-
-  if (!isOpen) return null;
+function EditBonusModal({ bonus, onSave, onClose }: { bonus: BonusResource; onSave: (bonus: BonusResource) => void; onClose: () => void }) {
+  const [formData, setFormData] = useState(bonus);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Criar Nova Lição</h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Vídeo</label>
-                <input
-                  type="url"
-                  value={formData.videoUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duração</label>
-                <input
-                  type="text"
-                  value={formData.duration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                  placeholder="10:00"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Conteúdo da Lição</label>
-              <textarea
-                value={formData.textContent}
-                onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
-                rows={6}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                placeholder="Digite o conteúdo da lição em markdown..."
-              />
-            </div>
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="submit"
-                className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Criar Lição
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Bônus</h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Título do bônus"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={3}
+          />
+          <select
+            value={formData.type}
+            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          >
+            <option value="course">Curso</option>
+            <option value="ebook">E-book</option>
+            <option value="guide">Guia</option>
+          </select>
+          <input
+            type="url"
+            placeholder="URL da thumbnail"
+            value={formData.thumbnail}
+            onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="text"
+            placeholder="Duração total (ex: 4h 30min)"
+            value={formData.totalDuration}
+            onChange={(e) => setFormData(prev => ({ ...prev, totalDuration: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="number"
+            placeholder="Avaliação (1-5)"
+            min="1"
+            max="5"
+            step="0.1"
+            value={formData.rating}
+            onChange={(e) => setFormData(prev => ({ ...prev, rating: parseFloat(e.target.value) }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+        </div>
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+          >
+            Salvar Alterações
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-// Modal para editar lição
-function LessonEditModal({ lesson, isOpen, onClose, onSave }: {
-  lesson: BonusLesson | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (updates: Partial<BonusLesson>) => void;
-}) {
+function NewLessonModal({ bonusId, onSave, onClose }: { bonusId: string; onSave: (lesson: Omit<BonusLesson, 'id'>) => void; onClose: () => void }) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     videoUrl: '',
     duration: '',
     textContent: '',
-    exercises: [] as QuizQuestion[]
+    exercises: [] as QuizQuestion[],
+    completed: false
   });
 
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Criar Nova Lição</h3>
+        <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Título da lição"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Descrição"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={2}
+          />
+          <input
+            type="url"
+            placeholder="URL do vídeo (YouTube embed)"
+            value={formData.videoUrl}
+            onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <input
+            type="text"
+            placeholder="Duração (ex: 25:30)"
+            value={formData.duration}
+            onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          />
+          <textarea
+            placeholder="Conteúdo da lição (texto/markdown)"
+            value={formData.textContent}
+            onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            rows={6}
+          />
+        </div>
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            disabled={!formData.title || !formData.description}
+            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+          >
+            Criar Lição
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditLessonModal({ lesson, onSave, onClose }: { lesson: BonusLesson; onSave: (lesson: BonusLesson) => void; onClose: () => void }) {
+  const [formData, setFormData] = useState(lesson);
   const [newExercise, setNewExercise] = useState({
     question: '',
     options: ['', '', '', ''],
@@ -1078,43 +977,19 @@ function LessonEditModal({ lesson, isOpen, onClose, onSave }: {
     explanation: ''
   });
 
-  useEffect(() => {
-    if (lesson) {
-      setFormData({
-        title: lesson.title,
-        description: lesson.description,
-        videoUrl: lesson.videoUrl,
-        duration: lesson.duration,
-        textContent: lesson.textContent,
-        exercises: lesson.exercises
-      });
-    }
-  }, [lesson]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
   const addExercise = () => {
-    if (!newExercise.question || newExercise.options.some(opt => !opt)) {
-      alert('Preencha a pergunta e todas as opções');
-      return;
-    }
-
+    if (!newExercise.question || newExercise.options.some(opt => !opt.trim())) return;
+    
     const exercise: QuizQuestion = {
       id: `exercise_${Date.now()}`,
-      question: newExercise.question,
-      options: newExercise.options,
-      correctAnswer: newExercise.correctAnswer,
-      explanation: newExercise.explanation
+      ...newExercise
     };
-
+    
     setFormData(prev => ({
       ...prev,
       exercises: [...prev.exercises, exercise]
     }));
-
+    
     setNewExercise({
       question: '',
       options: ['', '', '', ''],
@@ -1130,178 +1005,145 @@ function LessonEditModal({ lesson, isOpen, onClose, onSave }: {
     }));
   };
 
-  if (!isOpen || !lesson) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Lição</h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Informações básicas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duração</label>
-                <input
-                  type="text"
-                  value={formData.duration}
-                  onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                />
-              </div>
-            </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Editar Lição</h3>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Lesson Info */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 dark:text-white">Informações da Lição</h4>
+            <input
+              type="text"
+              placeholder="Título da lição"
+              value={formData.title}
+              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+            <textarea
+              placeholder="Descrição"
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              rows={2}
+            />
+            <input
+              type="url"
+              placeholder="URL do vídeo"
+              value={formData.videoUrl}
+              onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+            <input
+              type="text"
+              placeholder="Duração"
+              value={formData.duration}
+              onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            />
+            <textarea
+              placeholder="Conteúdo da lição"
+              value={formData.textContent}
+              onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              rows={8}
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL do Vídeo</label>
-              <input
-                type="url"
-                value={formData.videoUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Conteúdo da Lição</label>
-              <textarea
-                value={formData.textContent}
-                onChange={(e) => setFormData(prev => ({ ...prev, textContent: e.target.value }))}
-                rows={8}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            {/* Exercícios existentes */}
-            <div>
-              <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
-                Exercícios ({formData.exercises.length})
-              </h4>
-              
+          {/* Exercises */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900 dark:text-white">Exercícios ({formData.exercises.length})</h4>
+            
+            {/* Existing Exercises */}
+            <div className="space-y-3 max-h-60 overflow-y-auto">
               {formData.exercises.map((exercise, index) => (
-                <div key={exercise.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <h5 className="font-medium text-gray-900 dark:text-white">Exercício {index + 1}</h5>
+                <div key={exercise.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {index + 1}. {exercise.question}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Resposta: {exercise.options[exercise.correctAnswer]}
+                      </p>
+                    </div>
                     <button
-                      type="button"
                       onClick={() => removeExercise(exercise.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{exercise.question}</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {exercise.options.map((option, optIndex) => (
-                      <div key={optIndex} className={`p-2 rounded ${
-                        optIndex === exercise.correctAnswer 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
-                          : 'bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300'
-                      }`}>
-                        {option}
-                      </div>
-                    ))}
-                  </div>
                 </div>
               ))}
+            </div>
 
-              {/* Adicionar novo exercício */}
-              <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                <h5 className="font-medium text-gray-900 dark:text-white mb-3">Adicionar Novo Exercício</h5>
-                
-                <div className="space-y-3">
-                  <div>
+            {/* Add New Exercise */}
+            <div className="border-t border-gray-200 dark:border-gray-600 pt-4">
+              <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Adicionar Exercício</h5>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Pergunta"
+                  value={newExercise.question}
+                  onChange={(e) => setNewExercise(prev => ({ ...prev, question: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+                {newExercise.options.map((option, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="correctAnswer"
+                      checked={newExercise.correctAnswer === index}
+                      onChange={() => setNewExercise(prev => ({ ...prev, correctAnswer: index }))}
+                      className="text-green-600"
+                    />
                     <input
                       type="text"
-                      value={newExercise.question}
-                      onChange={(e) => setNewExercise(prev => ({ ...prev, question: e.target.value }))}
-                      placeholder="Digite a pergunta..."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+                      placeholder={`Opção ${index + 1}`}
+                      value={option}
+                      onChange={(e) => {
+                        const newOptions = [...newExercise.options];
+                        newOptions[index] = e.target.value;
+                        setNewExercise(prev => ({ ...prev, options: newOptions }));
+                      }}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    {newExercise.options.map((option, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="correctAnswer"
-                          checked={newExercise.correctAnswer === index}
-                          onChange={() => setNewExercise(prev => ({ ...prev, correctAnswer: index }))}
-                          className="text-green-600"
-                        />
-                        <input
-                          type="text"
-                          value={option}
-                          onChange={(e) => {
-                            const newOptions = [...newExercise.options];
-                            newOptions[index] = e.target.value;
-                            setNewExercise(prev => ({ ...prev, options: newOptions }));
-                          }}
-                          placeholder={`Opção ${index + 1}...`}
-                          className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div>
-                    <input
-                      type="text"
-                      value={newExercise.explanation}
-                      onChange={(e) => setNewExercise(prev => ({ ...prev, explanation: e.target.value }))}
-                      placeholder="Explicação (opcional)..."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
-                    />
-                  </div>
-                  
-                  <button
-                    type="button"
-                    onClick={addExercise}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
-                  >
-                    Adicionar Exercício
-                  </button>
-                </div>
+                ))}
+                <input
+                  type="text"
+                  placeholder="Explicação (opcional)"
+                  value={newExercise.explanation}
+                  onChange={(e) => setNewExercise(prev => ({ ...prev, explanation: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                />
+                <button
+                  onClick={addExercise}
+                  disabled={!newExercise.question || newExercise.options.some(opt => !opt.trim())}
+                  className="w-full px-3 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
+                >
+                  Adicionar Exercício
+                </button>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="flex space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="submit"
-                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Alterações
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
+        <div className="flex space-x-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave(formData)}
+            className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Salvar Alterações
+          </button>
         </div>
       </div>
     </div>
