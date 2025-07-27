@@ -668,6 +668,7 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
                     <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500 dark:text-gray-400">Funcionalidade de gerenciamento de onboarding em desenvolvimento</p>
+                  </div>
                 </div>
               )}
             </div>
