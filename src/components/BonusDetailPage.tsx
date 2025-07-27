@@ -12,6 +12,29 @@ interface BonusDetailPageProps {
 export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps) {
   const [selectedLesson, setSelectedLesson] = useState<BonusLesson | null>(null);
   const [lessons, setLessons] = useState<BonusLesson[]>(bonus.lessons);
+  const [currentBonus, setCurrentBonus] = useState<BonusResource>(bonus);
+
+  // Atualizar quando o bônus mudar (por exemplo, via admin)
+  React.useEffect(() => {
+    const handleBonusUpdate = () => {
+      const savedBonuses = localStorage.getItem('teacherpoli_bonus_data');
+      if (savedBonuses) {
+        try {
+          const bonuses = JSON.parse(savedBonuses);
+          const updatedBonus = bonuses.find((b: BonusResource) => b.id === bonus.id);
+          if (updatedBonus) {
+            setCurrentBonus(updatedBonus);
+            setLessons(updatedBonus.lessons);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar bônus atualizado:', error);
+        }
+      }
+    };
+
+    window.addEventListener('bonusDataUpdated', handleBonusUpdate);
+    return () => window.removeEventListener('bonusDataUpdated', handleBonusUpdate);
+  }, [bonus.id]);
 
   const handleLessonComplete = (lessonId: string) => {
     setLessons(prev => 
@@ -21,6 +44,29 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
           : lesson
       )
     );
+
+    // Salvar progresso no localStorage
+    const savedBonuses = localStorage.getItem('teacherpoli_bonus_data');
+    if (savedBonuses) {
+      try {
+        const bonuses = JSON.parse(savedBonuses);
+        const updatedBonuses = bonuses.map((b: BonusResource) => {
+          if (b.id === bonus.id) {
+            return {
+              ...b,
+              lessons: b.lessons.map((lesson: BonusLesson) =>
+                lesson.id === lessonId ? { ...lesson, completed: true } : lesson
+              )
+            };
+          }
+          return b;
+        });
+        localStorage.setItem('teacherpoli_bonus_data', JSON.stringify(updatedBonuses));
+        window.dispatchEvent(new Event('bonusDataUpdated'));
+      } catch (error) {
+        console.error('Erro ao salvar progresso:', error);
+      }
+    }
   };
 
   if (selectedLesson) {
@@ -51,29 +97,29 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Course Info */}
           <div className="lg:col-span-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">{bonus.title}</h1>
-            <p className="text-gray-700 dark:text-gray-200 text-base sm:text-lg mb-6">{bonus.description}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">{currentBonus.title}</h1>
+            <p className="text-gray-700 dark:text-gray-200 text-base sm:text-lg mb-6">{currentBonus.description}</p>
             
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <BookOpen className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.totalLessons}</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{currentBonus.totalLessons}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Aulas</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Clock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.totalDuration}</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{currentBonus.totalDuration}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Duração</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Star className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.rating}</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{currentBonus.rating}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Avaliação</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Award className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-white">{completedLessons}/{bonus.totalLessons}</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{completedLessons}/{currentBonus.totalLessons}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Concluídas</div>
               </div>
             </div>
@@ -97,8 +143,8 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <img 
-                src={bonus.thumbnail} 
-                alt={bonus.title}
+                src={currentBonus.thumbnail} 
+                alt={currentBonus.title}
                 className="w-full h-48 object-cover"
               />
               <div className="p-4">
@@ -116,7 +162,7 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Conteúdo do Curso</h2>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">Clique em uma aula para começar</p>
+          <p className="text-gray-600 dark:text-gray-300 mt-1">Clique em uma aula para começar ({lessons.length} lições)</p>
         </div>
         
        <div className="divide-y divide-gray-200 dark:divide-gray-700">

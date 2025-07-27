@@ -22,6 +22,10 @@ export default function ResourcesSection() {
         } catch (error) {
           console.error('Erro ao carregar bônus salvos:', error);
         }
+      } else {
+        // Se não há dados salvos, usar dados padrão e salvar
+        setCurrentBonuses(bonusResources);
+        localStorage.setItem('teacherpoli_bonus_data', JSON.stringify(bonusResources));
       }
     };
 
