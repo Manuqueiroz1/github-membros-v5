@@ -100,7 +100,6 @@ export default function OnboardingSection() {
                       <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
                         {video.title}
                       </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                       <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                         {video.description}
                       </p>
