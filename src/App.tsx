@@ -32,6 +32,7 @@ export default function App() {
   const [showPlanRequiredModal, setShowPlanRequiredModal] = useState(false);
   const [blockedTabName, setBlockedTabName] = useState('');
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Show welcome modal for first-time users
   React.useEffect(() => {
@@ -119,6 +120,10 @@ export default function App() {
     setActiveTab('ai-assistant');
   };
 
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   // Determine locked tabs based on user progress
   const getLockedTabs = () => {
     if (!user) return [];
@@ -154,21 +159,25 @@ export default function App() {
   // Main application
   return (
     <>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16 lg:pb-0">
         <Header 
           userName={user.name} 
           userEmail={user.email}
           onLogout={handleLogout}
           onAdminPanel={() => setShowAdminPanel(true)}
+          onMenuToggle={handleMobileMenuToggle}
+          isMobileMenuOpen={isMobileMenuOpen}
         />
         <Navigation 
           activeTab={activeTab} 
           onTabChange={setActiveTab}
           lockedTabs={getLockedTabs()}
           onLockedTabClick={handleLockedTabClick}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onMobileMenuClose={() => setIsMobileMenuOpen(false)}
         />
         
-        <main className="pb-8">
+        <main className="pb-8 pt-4 lg:pt-0">
           {activeTab === 'onboarding' && <OnboardingSection />}
           {activeTab === 'ai-assistant' && (
             <AIAssistantSection onPlanGenerated={handlePlanGenerated} />

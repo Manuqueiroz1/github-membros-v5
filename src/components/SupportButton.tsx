@@ -76,32 +76,32 @@ export default function SupportButton({ position = 'fixed', variant = 'primary' 
   return (
     <>
       {/* Fixed Support Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-50">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-110"
+          className="bg-purple-600 hover:bg-purple-700 text-white p-3 lg:p-4 rounded-full shadow-lg transition-all transform hover:scale-110"
         >
           {isOpen ? (
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 lg:h-6 lg:w-6" />
           ) : (
-            <MessageCircle className="h-6 w-6" />
+            <MessageCircle className="h-5 w-5 lg:h-6 lg:w-6" />
           )}
         </button>
       </div>
 
       {/* Support Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 lg:p-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="h-8 w-8 text-purple-600" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Precisa de Ajuda?</h2>
-              <p className="text-gray-600">Escolha a melhor forma de entrar em contato</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Precisa de Ajuda?</h2>
+              <p className="text-sm sm:text-base text-gray-600">Escolha a melhor forma de entrar em contato</p>
             </div>
 
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-4 sm:mb-6">
               {supportOptions.map((option, index) => {
                 const Icon = option.icon;
                 return (
@@ -111,12 +111,12 @@ export default function SupportButton({ position = 'fixed', variant = 'primary' 
                       option.action();
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center p-4 rounded-lg text-white transition-colors ${option.color}`}
+                    className={`w-full flex items-center p-3 sm:p-4 rounded-lg text-white transition-colors ${option.color}`}
                   >
-                    <Icon className="h-6 w-6 mr-4" />
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 mr-3 sm:mr-4 flex-shrink-0" />
                     <div className="text-left">
-                      <div className="font-semibold text-lg">{option.title}</div>
-                      <div className="text-sm opacity-90">{option.description}</div>
+                      <div className="font-semibold text-base sm:text-lg">{option.title}</div>
+                      <div className="text-xs sm:text-sm opacity-90">{option.description}</div>
                     </div>
                   </button>
                 );
@@ -125,7 +125,7 @@ export default function SupportButton({ position = 'fixed', variant = 'primary' 
 
             <button
               onClick={() => setIsOpen(false)}
-              className="w-full py-3 text-gray-600 hover:text-gray-800 transition-colors"
+              className="w-full py-2 sm:py-3 text-sm sm:text-base text-gray-600 hover:text-gray-800 transition-colors"
             >
               Fechar
             </button>
