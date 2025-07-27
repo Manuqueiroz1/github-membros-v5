@@ -52,7 +52,7 @@ export default function SettingsSection() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-8">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">Configurações</h2>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Configurações</h2>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Personalize sua experiência de aprendizado</p>
       </div>
 
@@ -64,7 +64,7 @@ export default function SettingsSection() {
               <Palette className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Aparência</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Aparência</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Personalize o tema da interface</p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function SettingsSection() {
               <User className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Conta</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Conta</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Gerencie suas informações pessoais</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function SettingsSection() {
               <Bell className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Notificações</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Notificações</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Configure suas preferências de notificação</p>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function SettingsSection() {
             <Shield className="h-5 w-5 text-red-600" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Privacidade e Segurança</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Privacidade e Segurança</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">Gerencie suas configurações de privacidade</p>
           </div>
         </div>
@@ -224,6 +224,7 @@ export default function SettingsSection() {
                 <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">Alterar Senha</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Alterar Senha</h2>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Digite sua senha atual e a nova senha</p>
             </div>
 
@@ -238,12 +239,13 @@ export default function SettingsSection() {
                     value={passwordData.current}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, current: e.target.value }))}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm sm:text-base"
                     placeholder="Digite sua senha atual"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
-                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     {showPasswords.current ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </button>
@@ -260,12 +262,13 @@ export default function SettingsSection() {
                     value={passwordData.new}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, new: e.target.value }))}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm sm:text-base"
                     placeholder="Digite sua nova senha"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
-                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     {showPasswords.new ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </button>
@@ -282,12 +285,13 @@ export default function SettingsSection() {
                     value={passwordData.confirm}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, confirm: e.target.value }))}
                     className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 pr-10 sm:pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 text-sm sm:text-base"
                     placeholder="Confirme sua nova senha"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
-                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     {showPasswords.confirm ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </button>
@@ -323,8 +327,8 @@ export default function SettingsSection() {
 
       {/* Support Section */}
       <div className="mt-6 sm:mt-8 bg-purple-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Precisa de ajuda com as configurações?</h3>
-        <p className="text-gray-600 mb-4">Nossa equipe pode te ajudar a personalizar sua experiência</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Precisa de ajuda com as configurações?</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">Nossa equipe pode te ajudar a personalizar sua experiência</p>
         <SupportButton position="inline" variant="primary" />
       </div>
 

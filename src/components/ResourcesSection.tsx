@@ -87,8 +87,8 @@ export default function ResourcesSection() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-8">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Bônus Exclusivos</h2>
-        <p className="text-sm sm:text-base text-gray-600">Materiais extras e conteúdos especiais para turbinar seus estudos</p>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Bônus Exclusivos</h2>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Materiais extras e conteúdos especiais para turbinar seus estudos</p>
       </div>
 
       {/* Featured Resource */}
@@ -165,10 +165,11 @@ export default function ResourcesSection() {
               </div>
               
               <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2">{resource.title}</h3>
-              <p className="text-gray-600 text-sm mb-4 line-clamp-3">{resource.description}</p>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">{resource.title}</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">{resource.description}</p>
               
               {/* Stats */}
-              <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 mb-4">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-1" />
@@ -186,7 +187,7 @@ export default function ResourcesSection() {
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{resource.downloads} downloads</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{resource.downloads} downloads</span>
                 <button 
                   onClick={() => setSelectedBonus(resource.id)}
                   className="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
@@ -203,38 +204,38 @@ export default function ResourcesSection() {
 
       {/* Study Tips */}
       <div className="mt-6 sm:mt-8 lg:mt-12 bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-6">Dicas de Estudo</h3>
+        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Dicas de Estudo</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-xl">📚</span>
             </div>
-            <h4 className="text-base font-semibold text-gray-900 mb-2">Estude Diariamente</h4>
-            <p className="text-gray-600 text-sm">Dedique pelo menos 30 minutos por dia aos estudos</p>
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Estude Diariamente</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Dedique pelo menos 30 minutos por dia aos estudos</p>
           </div>
           
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-xl">🎧</span>
             </div>
-            <h4 className="text-base font-semibold text-gray-900 mb-2">Pratique a Escuta</h4>
-            <p className="text-gray-600 text-sm">Ouça podcasts e músicas em inglês regularmente</p>
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Pratique a Escuta</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Ouça podcasts e músicas em inglês regularmente</p>
           </div>
           
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-xl">💬</span>
             </div>
-            <h4 className="text-base font-semibold text-gray-900 mb-2">Pratique Conversação</h4>
-            <p className="text-gray-600 text-sm">Converse com outros estudantes na comunidade</p>
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Pratique Conversação</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Converse com outros estudantes na comunidade</p>
           </div>
         </div>
       </div>
 
       {/* Support Section */}
       <div className="mt-6 sm:mt-8 bg-green-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Problemas com downloads?</h3>
-        <p className="text-gray-600 mb-4">Entre em contato para resolver rapidamente</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Problemas com downloads?</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">Entre em contato para resolver rapidamente</p>
         <SupportButton position="inline" variant="primary" />
       </div>
 

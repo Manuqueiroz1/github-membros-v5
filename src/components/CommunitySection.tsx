@@ -6,8 +6,8 @@ export default function CommunitySection() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-8">
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Comunidade</h2>
-        <p className="text-sm sm:text-base text-gray-600">Conecte-se com outros estudantes e pratique seu inglês</p>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Comunidade</h2>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Conecte-se com outros estudantes e pratique seu inglês</p>
       </div>
 
       {/* WhatsApp Community */}
@@ -62,10 +62,11 @@ export default function CommunitySection() {
             <MessageCircle className="h-6 w-6 text-blue-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Conversação Diária</h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Conversação Diária</h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
             Pratique inglês todos os dias com outros estudantes em conversas guiadas
           </p>
-          <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+          <button className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300">
             Participar →
           </button>
         </div>
@@ -75,10 +76,11 @@ export default function CommunitySection() {
             <Users className="h-6 w-6 text-purple-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Grupos de Estudo</h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Grupos de Estudo</h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
             Forme grupos de estudo com pessoas do seu nível e objetivos similares
           </p>
-          <button className="text-purple-600 text-sm font-medium hover:text-purple-700">
+          <button className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300">
             Encontrar Grupo →
           </button>
         </div>
@@ -88,10 +90,11 @@ export default function CommunitySection() {
             <Calendar className="h-6 w-6 text-green-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Eventos Semanais</h3>
-          <p className="text-gray-600 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Eventos Semanais</h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
             Participe de eventos especiais, webinars e sessões de conversação ao vivo
           </p>
-          <button className="text-green-600 text-sm font-medium hover:text-green-700">
+          <button className="text-green-600 dark:text-green-400 text-sm font-medium hover:text-green-700 dark:hover:text-green-300">
             Ver Agenda →
           </button>
         </div>
@@ -99,11 +102,11 @@ export default function CommunitySection() {
 
       {/* Community Guidelines */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-6">Diretrizes da Comunidade</h3>
+        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Diretrizes da Comunidade</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <h4 className="text-base font-semibold text-gray-900 mb-3">✅ Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">✅ Faça</h4>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>• Seja respeitoso com todos os membros</li>
               <li>• Pratique inglês regularmente</li>
               <li>• Ajude outros estudantes</li>
@@ -112,8 +115,8 @@ export default function CommunitySection() {
             </ul>
           </div>
           <div>
-            <h4 className="text-base font-semibold text-gray-900 mb-3">❌ Não Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-600">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">❌ Não Faça</h4>
+            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>• Spam ou mensagens promocionais</li>
               <li>• Linguagem ofensiva ou inadequada</li>
               <li>• Compartilhar conteúdo não relacionado</li>
@@ -126,8 +129,8 @@ export default function CommunitySection() {
 
       {/* Support Section */}
       <div className="mt-6 sm:mt-8 bg-yellow-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Não consegue acessar a comunidade?</h3>
-        <p className="text-gray-600 mb-4">Vamos te ajudar a se conectar com outros estudantes</p>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Não consegue acessar a comunidade?</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">Vamos te ajudar a se conectar com outros estudantes</p>
         <SupportButton position="inline" variant="primary" />
       </div>
 

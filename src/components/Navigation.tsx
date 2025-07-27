@@ -51,11 +51,11 @@ export default function Navigation({
                   onClick={() => handleTabClick(tab.id)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors min-w-0 ${
                     isLocked
-                      ? 'border-transparent text-gray-400 dark:text-gray-600 cursor-pointer hover:text-gray-600 dark:hover:text-gray-400'
+                      ? 'border-transparent text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300'
                       :
                     activeTab === tab.id
                       ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                      : 'border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
@@ -84,17 +84,17 @@ export default function Navigation({
                     onClick={() => handleTabClick(tab.id)}
                     className={`w-full flex items-center space-x-3 px-6 py-4 text-left font-medium transition-colors ${
                       isLocked
-                        ? 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                         :
                       activeTab === tab.id
                         ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border-r-4 border-purple-500'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700'
+                        : 'text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" />
                     <span>{tab.label}</span>
                     {isLocked && (
-                      <span className="ml-auto text-xs text-gray-400">🔒</span>
+                      <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">🔒</span>
                     )}
                   </button>
                 );
@@ -118,10 +118,10 @@ export default function Navigation({
                 onClick={() => handleTabClick(tab.id)}
                 className={`flex flex-col items-center justify-center space-y-1 transition-colors relative ${
                   isLocked
-                    ? 'text-gray-400 dark:text-gray-600'
+                    ? 'text-gray-400 dark:text-gray-500'
                     : isActive
                     ? 'text-purple-600 dark:text-purple-400'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                    : 'text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100'
                 }`}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
