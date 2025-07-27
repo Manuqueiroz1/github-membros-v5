@@ -137,9 +137,9 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
                     <div className="flex items-start space-x-3">
                       <Icon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">{template.title}</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{template.description}</p>
-                        <div className="flex items-center mt-2 text-xs text-gray-400 dark:text-gray-500">
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">{template.title}</h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{template.description}</p>
+                        <div className="flex items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
                           <Clock className="h-3 w-3 mr-1" />
                           {template.duration}
                         </div>
@@ -156,8 +156,8 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Plano Gerado</h3>
               <div className="bg-purple-50 rounded-lg p-4 mb-4">
-                <h4 className="text-base font-medium text-purple-900 dark:text-purple-100 mb-2">{generatedPlan.title}</h4>
-                <div className="text-sm text-purple-700 dark:text-purple-200 space-y-1">
+                <h4 className="text-base font-medium text-purple-900 dark:text-purple-50 mb-2">{generatedPlan.title}</h4>
+                <div className="text-sm text-purple-800 dark:text-purple-100 space-y-1">
                   <p>Nível: {generatedPlan.level}</p>
                   <p>Objetivo: {generatedPlan.objective}</p>
                   <p>Tempo diário: {generatedPlan.dailyTime}</p>

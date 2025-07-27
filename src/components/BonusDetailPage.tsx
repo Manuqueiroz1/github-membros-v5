@@ -51,30 +51,30 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Course Info */}
           <div className="lg:col-span-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">{bonus.title}</h1>
-            <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg mb-6">{bonus.description}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">{bonus.title}</h1>
+            <p className="text-gray-700 dark:text-gray-200 text-base sm:text-lg mb-6">{bonus.description}</p>
             
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <BookOpen className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{bonus.totalLessons}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Aulas</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.totalLessons}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Aulas</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Clock className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{bonus.totalDuration}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Duração</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.totalDuration}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Duração</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Star className="h-6 w-6 text-yellow-500 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{bonus.rating}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Avaliação</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{bonus.rating}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Avaliação</div>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
                 <Award className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{completedLessons}/{bonus.totalLessons}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Concluídas</div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{completedLessons}/{bonus.totalLessons}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Concluídas</div>
               </div>
             </div>
 
@@ -144,13 +144,13 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                         {lesson.title}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-2 line-clamp-2">
                         {lesson.description}
                       </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
                         <div className="flex items-center">
                           <Clock className="h-4 w-4 mr-1" />
                           {lesson.duration}

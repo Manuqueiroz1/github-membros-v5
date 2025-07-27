@@ -62,7 +62,8 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
         </button>
         
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{lesson.title}</h1>
-        <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">{lesson.description}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">{lesson.title}</h1>
+        <p className="text-gray-700 dark:text-gray-200 text-base sm:text-lg">{lesson.description}</p>
       </div>
 
       {/* Tabs */}
@@ -120,10 +121,10 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{lesson.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">{lesson.description}</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{lesson.title}</h3>
+              <p className="text-gray-700 dark:text-gray-200 mb-4">{lesson.description}</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500 dark:text-gray-400">Duração: {lesson.duration}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-300">Duração: {lesson.duration}</span>
                 {!lesson.completed && (
                   <button
                     onClick={onComplete}
@@ -158,10 +159,10 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
             {!showResults ? (
               <>
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     Exercícios da Aula
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-gray-700 dark:text-gray-200">
                     Responda todas as perguntas e clique em "Corrigir" para ver os resultados.
                   </p>
                 </div>
@@ -169,7 +170,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                 <div className="space-y-8">
                   {lesson.exercises.map((question, index) => (
                     <div key={question.id} className="border border-gray-200 rounded-lg p-6">
-                      <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                      <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                         {index + 1}. {question.question}
                       </h4>
                       <div className="space-y-3">
@@ -199,7 +200,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
                               )}
                             </div>
-                            <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                            <span className="text-gray-800 dark:text-gray-200">{option}</span>
                           </label>
                         ))}
                       </div>

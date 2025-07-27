@@ -62,8 +62,8 @@ export default function CommunitySection() {
             <MessageCircle className="h-6 w-6 text-blue-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Conversação Diária</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Conversação Diária</h3>
-          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Conversação Diária</h3>
+          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
             Pratique inglês todos os dias com outros estudantes em conversas guiadas
           </p>
           <button className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300">
@@ -76,8 +76,8 @@ export default function CommunitySection() {
             <Users className="h-6 w-6 text-purple-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Grupos de Estudo</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Grupos de Estudo</h3>
-          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Grupos de Estudo</h3>
+          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
             Forme grupos de estudo com pessoas do seu nível e objetivos similares
           </p>
           <button className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300">
@@ -90,8 +90,8 @@ export default function CommunitySection() {
             <Calendar className="h-6 w-6 text-green-600" />
           </div>
           <h3 className="text-base font-semibold text-gray-900 mb-2">Eventos Semanais</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Eventos Semanais</h3>
-          <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Eventos Semanais</h3>
+          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
             Participe de eventos especiais, webinars e sessões de conversação ao vivo
           </p>
           <button className="text-green-600 dark:text-green-400 text-sm font-medium hover:text-green-700 dark:hover:text-green-300">
@@ -105,8 +105,8 @@ export default function CommunitySection() {
         <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Diretrizes da Comunidade</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">✅ Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">✅ Faça</h4>
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
               <li>• Seja respeitoso com todos os membros</li>
               <li>• Pratique inglês regularmente</li>
               <li>• Ajude outros estudantes</li>
@@ -115,8 +115,8 @@ export default function CommunitySection() {
             </ul>
           </div>
           <div>
-            <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">❌ Não Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">❌ Não Faça</h4>
+            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
               <li>• Spam ou mensagens promocionais</li>
               <li>• Linguagem ofensiva ou inadequada</li>
               <li>• Compartilhar conteúdo não relacionado</li>
