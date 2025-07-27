@@ -108,7 +108,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         {/* Video Tab */}
         {activeTab === 'video' && (
           <div>
@@ -121,8 +121,8 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{lesson.title}</h3>
-              <p className="text-gray-700 dark:text-gray-200 mb-4">{lesson.description}</p>
+             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{lesson.title}</h3>
+             <p className="text-gray-700 dark:text-gray-300 mb-4">{lesson.description}</p>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-300">Duração: {lesson.duration}</span>
                 {!lesson.completed && (
@@ -159,18 +159,18 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
             {!showResults ? (
               <>
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     Exercícios da Aula
                   </h3>
-                  <p className="text-gray-700 dark:text-gray-200">
+                 <p className="text-gray-700 dark:text-gray-300">
                     Responda todas as perguntas e clique em "Corrigir" para ver os resultados.
                   </p>
                 </div>
 
                 <div className="space-y-8">
                   {lesson.exercises.map((question, index) => (
-                    <div key={question.id} className="border border-gray-200 rounded-lg p-6">
-                      <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                   <div key={question.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                     <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                         {index + 1}. {question.question}
                       </h4>
                       <div className="space-y-3">
@@ -179,8 +179,8 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                             key={optionIndex}
                             className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                               selectedAnswers[question.id] === optionIndex
-                                ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                                : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                               ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
+                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                             }`}
                           >
                             <input
@@ -200,7 +200,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                                 <div className="w-2 h-2 rounded-full bg-white"></div>
                               )}
                             </div>
-                            <span className="text-gray-800 dark:text-gray-200">{option}</span>
+                           <span className="text-gray-800 dark:text-gray-300">{option}</span>
                           </label>
                         ))}
                       </div>
@@ -223,7 +223,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                 {/* Results */}
                 <div className="text-center mb-8">
                   <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
-                    scorePercentage >= 70 ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
+                   scorePercentage >= 70 ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                   }`}>
                     <span className={`text-2xl font-bold ${
                       scorePercentage >= 70 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
@@ -231,7 +231,7 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                       {Math.round(scorePercentage)}%
                     </span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {scorePercentage >= 70 ? 'Parabéns!' : 'Continue Praticando!'}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300">
@@ -246,8 +246,8 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                     const isCorrect = userAnswer === question.correctAnswer;
                     
                     return (
-                      <div key={question.id} className="border border-gray-200 rounded-lg p-6">
-                        <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                     <div key={question.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-6">
+                       <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                           {index + 1}. {question.question}
                         </h4>
                         
@@ -256,11 +256,11 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                             let className = 'flex items-center p-3 rounded-lg border ';
                             
                             if (optionIndex === question.correctAnswer) {
-                              className += 'border-green-500 bg-green-50 dark:bg-green-900/20';
+                             className += 'border-green-500 bg-green-50 dark:bg-green-900/30';
                             } else if (optionIndex === userAnswer && !isCorrect) {
-                              className += 'border-red-500 bg-red-50 dark:bg-red-900/20';
+                             className += 'border-red-500 bg-red-50 dark:bg-red-900/30';
                             } else {
-                              className += 'border-gray-200 dark:border-gray-600';
+                             className += 'border-gray-200 dark:border-gray-600';
                             }
                             
                             return (
@@ -289,9 +289,9 @@ export default function LessonViewer({ lesson, onBack, onComplete }: LessonViewe
                         </div>
                         
                         {question.explanation && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                            <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Explicação:</h5>
-                            <p className="text-blue-800 dark:text-blue-200 text-sm">{question.explanation}</p>
+                         <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                           <h5 className="font-medium text-blue-900 dark:text-white mb-2">Explicação:</h5>
+                           <p className="text-blue-800 dark:text-gray-300 text-sm">{question.explanation}</p>
                           </div>
                         )}
                       </div>

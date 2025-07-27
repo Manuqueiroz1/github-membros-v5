@@ -58,13 +58,13 @@ export default function SettingsSection() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {/* Appearance Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
               <Palette className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Aparência</h3>
+             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Aparência</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Personalize o tema da interface</p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function SettingsSection() {
               <User className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Conta</h3>
+             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Conta</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Gerencie suas informações pessoais</p>
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function SettingsSection() {
               <Bell className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Notificações</h3>
+             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Notificações</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Configure suas preferências de notificação</p>
             </div>
           </div>
@@ -192,13 +192,13 @@ export default function SettingsSection() {
       </div>
 
       {/* Privacy & Security */}
-      <div className="mt-6 sm:mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+     <div className="mt-6 sm:mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
             <Shield className="h-5 w-5 text-red-600" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Privacidade e Segurança</h3>
+           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Privacidade e Segurança</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">Gerencie suas configurações de privacidade</p>
           </div>
         </div>
@@ -326,8 +326,8 @@ export default function SettingsSection() {
 
 
       {/* Support Section */}
-      <div className="mt-6 sm:mt-8 bg-purple-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Precisa de ajuda com as configurações?</h3>
+     <div className="mt-6 sm:mt-8 bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 sm:p-6 text-center">
+       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Precisa de ajuda com as configurações?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Nossa equipe pode te ajudar a personalizar sua experiência</p>
         <SupportButton position="inline" variant="primary" />
       </div>

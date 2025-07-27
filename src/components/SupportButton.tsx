@@ -42,9 +42,9 @@ export default function SupportButton({ position = 'fixed', variant = 'primary' 
         </button>
 
         {isOpen && (
-          <div className="absolute top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+         <div className="absolute top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50">
             <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Como podemos ajudar?</h3>
+             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Como podemos ajudar?</h3>
               <div className="space-y-2">
                 {supportOptions.map((option, index) => {
                   const Icon = option.icon;
@@ -92,12 +92,12 @@ export default function SupportButton({ position = 'fixed', variant = 'primary' 
       {/* Support Modal */}
       {isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 lg:p-8">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md">
+         <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md">
             <div className="text-center mb-6">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Precisa de Ajuda?</h2>
+             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">Precisa de Ajuda?</h2>
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">Escolha a melhor forma de entrar em contato</p>
             </div>
 

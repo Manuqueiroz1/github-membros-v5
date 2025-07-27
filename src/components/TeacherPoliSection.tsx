@@ -44,9 +44,9 @@ export default function TeacherPoliSection() {
       </div>
 
       {/* Access Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">Acesse a Teacher Poli</h3>
-        <p className="text-sm sm:text-base text-gray-700 dark:text-gray-200 text-center mb-6">Sua assistente de IA está esperando por você</p>
+     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+       <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">Acesse a Teacher Poli</h3>
+       <p className="text-sm sm:text-base text-gray-700 dark:text-gray-300 text-center mb-6">Sua assistente de IA está esperando por você</p>
         
         <div className="text-center">
           <a
@@ -73,8 +73,8 @@ export default function TeacherPoliSection() {
       </div>
 
       {/* Support Section */}
-      <div className="mt-6 sm:mt-8 bg-purple-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Dificuldades para acessar?</h3>
+     <div className="mt-6 sm:mt-8 bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 sm:p-6 text-center">
+       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Dificuldades para acessar?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Estamos aqui para te ajudar a começar sua jornada</p>
         <SupportButton position="inline" variant="primary" />
       </div>

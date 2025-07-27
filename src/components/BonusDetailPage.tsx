@@ -113,17 +113,17 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
       </div>
 
       {/* Lessons List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Conteúdo do Curso</h2>
+     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Conteúdo do Curso</h2>
           <p className="text-gray-600 dark:text-gray-300 mt-1">Clique em uma aula para começar</p>
         </div>
         
-        <div className="divide-y divide-gray-200">
+       <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {lessons.map((lesson, index) => (
             <div
               key={lesson.id}
-              className="p-4 sm:p-6 hover:bg-gray-50 cursor-pointer transition-colors"
+             className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
               onClick={() => setSelectedLesson(lesson)}
             >
               <div className="flex items-start space-x-4">
@@ -144,10 +144,10 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                         {lesson.title}
                       </h3>
-                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-2 line-clamp-2">
+                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
                         {lesson.description}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-300">
@@ -177,8 +177,8 @@ export default function BonusDetailPage({ bonus, onBack }: BonusDetailPageProps)
       </div>
 
       {/* Support Section */}
-      <div className="mt-8 bg-purple-50 rounded-lg p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Precisa de ajuda com o curso?</h3>
+     <div className="mt-8 bg-purple-50 dark:bg-purple-900/30 rounded-lg p-6 text-center">
+       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Precisa de ajuda com o curso?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Nossa equipe está aqui para apoiar seu aprendizado</p>
         <SupportButton position="inline" variant="primary" />
       </div>

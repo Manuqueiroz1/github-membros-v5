@@ -57,13 +57,12 @@ export default function CommunitySection() {
 
       {/* Community Features */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
             <MessageCircle className="h-6 w-6 text-blue-600" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Conversação Diária</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Conversação Diária</h3>
-          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
+         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Conversação Diária</h3>
+         <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
             Pratique inglês todos os dias com outros estudantes em conversas guiadas
           </p>
           <button className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:text-blue-700 dark:hover:text-blue-300">
@@ -71,13 +70,12 @@ export default function CommunitySection() {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
             <Users className="h-6 w-6 text-purple-600" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Grupos de Estudo</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Grupos de Estudo</h3>
-          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
+         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Grupos de Estudo</h3>
+         <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
             Forme grupos de estudo com pessoas do seu nível e objetivos similares
           </p>
           <button className="text-purple-600 dark:text-purple-400 text-sm font-medium hover:text-purple-700 dark:hover:text-purple-300">
@@ -85,13 +83,12 @@ export default function CommunitySection() {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
             <Calendar className="h-6 w-6 text-green-600" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Eventos Semanais</h3>
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Eventos Semanais</h3>
-          <p className="text-gray-700 dark:text-gray-200 text-sm mb-4">
+         <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Eventos Semanais</h3>
+         <p className="text-gray-700 dark:text-gray-300 text-sm mb-4">
             Participe de eventos especiais, webinars e sessões de conversação ao vivo
           </p>
           <button className="text-green-600 dark:text-green-400 text-sm font-medium hover:text-green-700 dark:hover:text-green-300">
@@ -101,12 +98,12 @@ export default function CommunitySection() {
       </div>
 
       {/* Community Guidelines */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
-        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Diretrizes da Comunidade</h3>
+     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 lg:p-8">
+       <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white mb-6">Diretrizes da Comunidade</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">✅ Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
+           <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">✅ Faça</h4>
+           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
               <li>• Seja respeitoso com todos os membros</li>
               <li>• Pratique inglês regularmente</li>
               <li>• Ajude outros estudantes</li>
@@ -115,8 +112,8 @@ export default function CommunitySection() {
             </ul>
           </div>
           <div>
-            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">❌ Não Faça</h4>
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
+           <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">❌ Não Faça</h4>
+           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
               <li>• Spam ou mensagens promocionais</li>
               <li>• Linguagem ofensiva ou inadequada</li>
               <li>• Compartilhar conteúdo não relacionado</li>
@@ -128,8 +125,8 @@ export default function CommunitySection() {
       </div>
 
       {/* Support Section */}
-      <div className="mt-6 sm:mt-8 bg-yellow-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Não consegue acessar a comunidade?</h3>
+     <div className="mt-6 sm:mt-8 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg p-4 sm:p-6 text-center">
+       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Não consegue acessar a comunidade?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Vamos te ajudar a se conectar com outros estudantes</p>
         <SupportButton position="inline" variant="primary" />
       </div>

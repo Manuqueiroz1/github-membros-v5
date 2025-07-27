@@ -73,18 +73,18 @@ export default function OnboardingSection() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
         {/* Video List */}
         <div className="lg:col-span-1 order-2 lg:order-1">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="p-4 sm:p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Lista de Vídeos</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Lista de Vídeos</h3>
             </div>
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {videos.map((video) => (
                 <div
                   key={video.id}
                   className={`p-4 cursor-pointer transition-colors ${
-                    'hover:bg-gray-50'
+                    'hover:bg-gray-50 dark:hover:bg-gray-700'
                   } ${
-                    selectedVideo?.id === video.id ? 'bg-purple-50 border-r-4 border-purple-500' : ''
+                    selectedVideo?.id === video.id ? 'bg-purple-50 dark:bg-purple-900/30 border-r-4 border-purple-500' : ''
                   }`}
                   onClick={() => handleVideoSelect(video)}
                 >
@@ -97,7 +97,7 @@ export default function OnboardingSection() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
                         {video.title}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
@@ -122,7 +122,7 @@ export default function OnboardingSection() {
 
         {/* Video Player */}
         <div className="lg:col-span-2 order-1 lg:order-2">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
             {selectedVideo && showPlayer ? (
               <div>
                 <div className="aspect-video rounded-t-lg overflow-hidden">
@@ -139,7 +139,7 @@ export default function OnboardingSection() {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 pr-4">
                         {selectedVideo.title}
                       </h3>
-                      <p className="text-sm text-gray-700 dark:text-gray-200 mb-4">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
                         {selectedVideo.description}
                       </p>
                     </div>
@@ -175,8 +175,8 @@ export default function OnboardingSection() {
       </div>
 
       {/* Support Section */}
-      <div className="mt-6 sm:mt-8 bg-purple-50 rounded-lg p-4 sm:p-6 text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Precisa de ajuda?</h3>
+      <div className="mt-6 sm:mt-8 bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 sm:p-6 text-center">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Precisa de ajuda?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Nossa equipe está aqui para te apoiar em cada passo</p>
         <SupportButton position="inline" variant="primary" />
       </div>
