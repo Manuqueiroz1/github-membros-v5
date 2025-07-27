@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Users, BookOpen, Plus, Edit3, Trash2, Save, Upload, FileText, Video, Award } from 'lucide-react';
+import { X, Settings, Users, BookOpen, Plus, Edit3, Trash2, Save, Upload, FileText, Video, Award, User } from 'lucide-react';
 import { isAdmin, hasPermission } from '../utils/adminConfig';
+import { addStudent, getStudents, removeStudent, updateStudentStatus, getStudentStats, searchStudents, ManualStudent, CreateStudentData } from '../utils/studentManager';
 import { bonusResources } from '../data/bonusData';
 import { BonusResource, BonusLesson, QuizQuestion } from '../types';
 
@@ -11,13 +12,26 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'bonuses' | 'students'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'bonuses' | 'students' | 'onboarding'>('overview');
   const [bonuses, setBonuses] = useState<BonusResource[]>([]);
   const [selectedBonus, setSelectedBonus] = useState<BonusResource | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<BonusLesson | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showNewBonusModal, setShowNewBonusModal] = useState(false);
   const [showNewLessonModal, setShowNewLessonModal] = useState(false);
+
+  // Estados para gerenciamento de alunos
+  const [students, setStudents] = useState<ManualStudent[]>([]);
+  const [studentStats, setStudentStats] = useState({ total: 0, active: 0, inactive: 0, addedThisMonth: 0 });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [newStudent, setNewStudent] = useState<CreateStudentData>({
+    name: '',
+    email: '',
+    notes: '',
+    added_by: userEmail
+  });
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
   // Carregar bônus salvos
   useEffect(() => {
@@ -29,6 +43,25 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
     }
   }, []);
 
+  // Carregar alunos
+  useEffect(() => {
+    if (activeTab === 'students') {
+      loadStudents();
+      loadStudentStats();
+    }
+  }, [activeTab]);
+
+  const loadStudents = async () => {
+    setIsLoadingStudents(true);
+    try {
+      const studentsData = searchQuery ? await searchStudents(searchQuery) : await getStudents();
+      setStudents(studentsData);
+    } catch (error) {
+      console.error('Erro ao carregar alunos:', error);
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
   // Salvar bônus
   const saveBonuses = (updatedBonuses: BonusResource[]) => {
     setBonuses(updatedBonuses);
@@ -138,6 +171,57 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
     }
   };
 
+  const loadStudentStats = async () => {
+    try {
+      const stats = await getStudentStats();
+      setStudentStats(stats);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
+  const handleAddStudent = async () => {
+    if (!newStudent.name || !newStudent.email) {
+      alert('Nome e email são obrigatórios');
+      return;
+    }
+
+    try {
+      await addStudent(newStudent);
+      setShowAddStudentModal(false);
+      setNewStudent({ name: '', email: '', notes: '', added_by: userEmail });
+      loadStudents();
+      loadStudentStats();
+      alert('Aluno adicionado com sucesso!');
+    } catch (error: any) {
+      alert(error.message || 'Erro ao adicionar aluno');
+    }
+  };
+
+  const handleRemoveStudent = async (studentId: string) => {
+    if (confirm('Tem certeza que deseja remover este aluno?')) {
+      try {
+        await removeStudent(studentId);
+        loadStudents();
+        loadStudentStats();
+        alert('Aluno removido com sucesso!');
+      } catch (error) {
+        alert('Erro ao remover aluno');
+      }
+    }
+  };
+
+  const handleToggleStudentStatus = async (studentId: string, currentStatus: 'active' | 'inactive') => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      await updateStudentStatus(studentId, newStatus);
+      loadStudents();
+      loadStudentStats();
+    } catch (error) {
+      alert('Erro ao atualizar status do aluno');
+    }
+  };
+
   if (!isAdmin(userEmail)) {
     return null;
   }
@@ -208,6 +292,17 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
                   <Users className="h-4 w-4 inline mr-2" />
                   Alunos
                 </button>
+                <button
+                  onClick={() => setActiveTab('onboarding')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'onboarding'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Video className="h-4 w-4 inline mr-2" />
+                  Onboarding
+                </button>
               </nav>
             </div>
 
@@ -245,7 +340,7 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
                         <Users className="h-8 w-8 text-purple-600" />
                         <div className="ml-4">
                           <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Usuários Ativos</p>
-                          <p className="text-2xl font-bold text-purple-900 dark:text-white">--</p>
+                          <p className="text-2xl font-bold text-purple-900 dark:text-white">{studentStats.active}</p>
                         </div>
                       </div>
                     </div>
@@ -425,9 +520,154 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
                 <div className="space-y-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Alunos</h3>
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400">Funcionalidade de gerenciamento de alunos em desenvolvimento</p>
+                    <button
+                      onClick={() => setShowAddStudentModal(true)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Aluno
+                    </button>
                   </div>
+
+                  {/* Estatísticas */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center">
+                        <Users className="h-6 w-6 text-blue-600" />
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total</p>
+                          <p className="text-xl font-bold text-gray-900 dark:text-white">{studentStats.total}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Ativos</p>
+                          <p className="text-xl font-bold text-green-600">{studentStats.active}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                          <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Inativos</p>
+                          <p className="text-xl font-bold text-red-600">{studentStats.inactive}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                          <Plus className="w-3 h-3 text-purple-600" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Este Mês</p>
+                          <p className="text-xl font-bold text-purple-600">{studentStats.addedThisMonth}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Busca */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="text"
+                        placeholder="Buscar por nome ou email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      />
+                      <button
+                        onClick={loadStudents}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Buscar
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista de Alunos */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Lista de Alunos ({students.length})
+                      </h4>
+                    </div>
+                    
+                    {isLoadingStudents ? (
+                      <div className="p-8 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">Carregando alunos...</p>
+                      </div>
+                    ) : students.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">
+                          {searchQuery ? 'Nenhum aluno encontrado' : 'Nenhum aluno cadastrado'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {students.map((student) => (
+                          <div key={student.id} className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                  <User className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                                </div>
+                                <div>
+                                  <h5 className="font-medium text-gray-900 dark:text-white">{student.name}</h5>
+                                  <p className="text-sm text-gray-600 dark:text-gray-300">{student.email}</p>
+                                  {student.notes && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{student.notes}</p>
+                                  )}
+                                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    Adicionado em {new Date(student.added_at).toLocaleDateString('pt-BR')}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  onClick={() => handleToggleStudentStatus(student.id, student.status)}
+                                  className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    student.status === 'active'
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  }`}
+                                >
+                                  {student.status === 'active' ? 'Ativo' : 'Inativo'}
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveStudent(student.id)}
+                                  className="p-1 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
+                                  title="Remover aluno"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'onboarding' && (
+                <div className="space-y-6">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Gerenciar Onboarding</h3>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400">Funcionalidade de gerenciamento de onboarding em desenvolvimento</p>
                 </div>
               )}
             </div>
@@ -447,6 +687,68 @@ export default function AdminPanel({ isVisible, onToggle, userEmail }: AdminPane
         onClose={() => setShowNewLessonModal(false)}
         onSave={createNewLesson}
       />
+
+      {/* Modal Adicionar Aluno */}
+      {showAddStudentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Adicionar Novo Aluno</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
+                  <input
+                    type="text"
+                    value={newStudent.name}
+                    onChange={(e) => setNewStudent(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    placeholder="Nome do aluno"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newStudent.email}
+                    onChange={(e) => setNewStudent(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    placeholder="email@exemplo.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Observações (opcional)</label>
+                  <textarea
+                    value={newStudent.notes}
+                    onChange={(e) => setNewStudent(prev => ({ ...prev, notes: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    placeholder="Observações sobre o aluno..."
+                  />
+                </div>
+              </div>
+              <div className="flex space-x-3 pt-6">
+                <button
+                  onClick={handleAddStudent}
+                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Adicionar Aluno
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddStudentModal(false);
+                    setNewStudent({ name: '', email: '', notes: '', added_by: userEmail });
+                  }}
+                  className="flex-1 bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <LessonEditModal
         lesson={selectedLesson}
