@@ -111,6 +111,7 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
     element.click();
     document.body.removeChild(element);
   };
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
       <div className="mb-8">
@@ -122,70 +123,69 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
         {/* Templates */}
         <div className="lg:col-span-1 order-2 lg:order-1">
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Templates Rápidos</h3>
-            <div className="space-y-3">
-              {studyPlanTemplates.map((template, index) => {
-                const Icon = template.icon;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleTemplateSelect(template)}
-                    className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <Icon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 dark:text-white">{template.title}</h4>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{template.description}</p>
-                        <div className="flex items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {template.duration}
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Templates Rápidos</h3>
+              <div className="space-y-3">
+                {studyPlanTemplates.map((template, index) => {
+                  const Icon = template.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleTemplateSelect(template)}
+                      className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <Icon className="h-5 w-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 dark:text-white">{template.title}</h4>
+                          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{template.description}</p>
+                          <div className="flex items-center mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {template.duration}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Generated Plan Download */}
-          {generatedPlan && (
-           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plano Gerado</h3>
-             <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 mb-4">
-               <h4 className="text-base font-medium text-purple-900 dark:text-white mb-2">{generatedPlan.title}</h4>
-               <div className="text-sm text-purple-800 dark:text-gray-300 space-y-1">
-                  <p>Nível: {generatedPlan.level}</p>
-                  <p>Objetivo: {generatedPlan.objective}</p>
-                  <p>Tempo diário: {generatedPlan.dailyTime}</p>
-                </div>
+                    </button>
+                  );
+                })}
               </div>
-              <button
-                onClick={downloadPlan}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-base font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Baixar Plano Completo
-              </button>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Válido por 30 dias</p>
             </div>
-          )}
+          
+            {/* Generated Plan Download */}
+            {generatedPlan && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Plano Gerado</h3>
+                <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 mb-4">
+                  <h4 className="text-base font-medium text-purple-900 dark:text-white mb-2">{generatedPlan.title}</h4>
+                  <div className="text-sm text-purple-800 dark:text-gray-300 space-y-1">
+                    <p>Nível: {generatedPlan.level}</p>
+                    <p>Objetivo: {generatedPlan.objective}</p>
+                    <p>Tempo diário: {generatedPlan.dailyTime}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={downloadPlan}
+                  className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-base font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Baixar Plano Completo
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Válido por 30 dias</p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Chat Interface */}
         <div className="lg:col-span-3 order-1 lg:order-2">
-         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[400px] sm:h-[500px] lg:h-[600px] flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-[400px] sm:h-[500px] lg:h-[600px] flex flex-col">
             {/* Chat Header */}
-           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-3">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center space-x-3">
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                 <Brain className="h-5 w-5 text-purple-600" />
               </div>
               <div>
-               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Assistente IA</h3>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Assistente IA</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Especialista em ensino de inglês</p>
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
             </div>
 
             {/* Input */}
-           <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-2 items-center">
                 <input
                   type="text"
@@ -264,8 +264,8 @@ export default function AIAssistantSection({ onPlanGenerated }: AIAssistantSecti
       </div>
 
       {/* Support Section */}
-     <div className="mt-6 sm:mt-8 bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 sm:p-6 text-center">
-       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Dúvidas sobre seu plano?</h3>
+      <div className="mt-6 sm:mt-8 bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 sm:p-6 text-center">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Dúvidas sobre seu plano?</h3>
         <p className="text-gray-600 dark:text-gray-300 mb-4">Fale conosco para otimizar seus estudos</p>
         <SupportButton position="inline" variant="primary" />
       </div>
